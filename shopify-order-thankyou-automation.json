@@ -1,0 +1,355 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "087c16dc-065a-424d-9ac6-e7ec9e03ff46",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -224,
+        -32
+      ],
+      "id": "f265463f-c5ba-47e1-a4b3-5685fbea18b8",
+      "name": "Webhook",
+      "webhookId": "087c16dc-065a-424d-9ac6-e7ec9e03ff46"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://jsonplaceholder.typicode.com/users",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        -16,
+        -32
+      ],
+      "id": "7db6b6ec-fd65-4825-a742-6237869fb1c8",
+      "name": "HTTP Request"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -32
+      ],
+      "id": "36223082-214d-43f8-801b-a86aa12c3fee",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.first().json.data; // ya jo bhi field name ho Aggregate ke output mein\nlet emailBody = \"⚠️ Products List:\\n\\n\";\n\nitems.forEach(item => {\n  emailBody += `➤ ${item.title}\\n➢ Rating: ${item.rating.rate}\\n\\n`;\n});\n\nreturn [{ json: { emailBody: emailBody } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        -32
+      ],
+      "id": "ebed5146-fdd7-43ad-8c0d-839fbff56234",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "haris.awann25@gmail.com",
+        "subject": "Product List",
+        "emailType": "text",
+        "message": "={{ $json.emailBody }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        -32
+      ],
+      "id": "a8526c38-d691-482b-84d1-f2ebd794ee5c",
+      "name": "Send a message",
+      "webhookId": "04a782d2-6e06-4e44-b925-c7aa6123dd1f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "6aKMRliTtLUZlpBC",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d6e06178-a7a2-469c-86e3-f382a91d3884",
+              "leftValue": "={{ $json.rating.rate }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        -16
+      ],
+      "id": "4e64295d-f2cc-489f-bae0-44649c4a6c7a",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "topic": "orders/create"
+      },
+      "type": "n8n-nodes-base.shopifyTrigger",
+      "typeVersion": 1,
+      "position": [
+        -240,
+        272
+      ],
+      "id": "35cb6725-0b01-4bcd-b8c9-84c8597845e1",
+      "name": "Shopify Trigger",
+      "webhookId": "6117b77f-da82-40b2-a406-e2d763999e72",
+      "credentials": {
+        "shopifyAccessTokenApi": {
+          "id": "xYYVcLrRAtWlB9h2",
+          "name": "Shopify Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const order = $input.first().json;\nreturn [{\n  json: {\n    customerName: order.customer.first_name,\n    customerEmail: order.customer.email,\n    productName: order.line_items[0].title,\n    totalPrice: order.total_price\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        272
+      ],
+      "id": "423949f4-57ef-4905-8432-cc8cda5b19dc",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "AIMessagePromptTemplate",
+              "message": "=Customer ka naam {{ $json.customerName }} hai, usne {{ $json.productName }} order kiya hai, total amount {{ $json.totalPrice }} hai.  Ek warm, friendly thank-you message likho customer ke liye, jisme unka naam aur product mention ho."
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        160,
+        272
+      ],
+      "id": "6b2dc73a-de8d-47d6-b3da-c692fbc6a865",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "sendTo": "haris.awann25@gmail.com",
+        "subject": "Thank you for order.",
+        "emailType": "text",
+        "message": "={{ $json.text }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        528,
+        272
+      ],
+      "id": "9e391e3b-7eea-4415-9ef8-e0dbdbd3f7a4",
+      "name": "Send a message1",
+      "webhookId": "d1d1082e-93c2-4d71-9d05-5600c0e25b42",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "wf4q6Zem5CEzdRrG",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "openai/gpt-oss-20b",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGroq",
+      "typeVersion": 1,
+      "position": [
+        160,
+        480
+      ],
+      "id": "136d15eb-8db5-4e12-92b8-af31fbff16d9",
+      "name": "Groq Chat Model",
+      "credentials": {
+        "groqApi": {
+          "id": "nntn0PJmI009quIN",
+          "name": "Groq account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Shopify Trigger": [
+      {
+        "json": {
+          "id": 12345,
+          "customer": {
+            "first_name": "Ali",
+            "last_name": "Khan",
+            "email": "ali@example.com"
+          },
+          "line_items": [
+            {
+              "title": "Test T-Shirt",
+              "price": "1500"
+            }
+          ],
+          "total_price": "1500"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Shopify Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "fb63f0ab-e01c-417c-bb20-4def056dcaf5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "52e55ace8910cd144f45900198f52bb26a09b6133d510edd010c476c38a299e3"
+  },
+  "id": "3NFY9uThWubU6zBi",
+  "tags": []
+}
