@@ -1,0 +1,59 @@
+{
+  "name": "New Agent",
+  "model": "openai/gpt-5.6-terra",
+  "instructions": "Tum ek friendly customer support agent ho Shopify store \"Haris Automation\" ke liye. \n\nCustomers ke order-related sawalon ka jawab do, polite aur helpful raho.\n\nIMPORTANT RULES:\n\n- Sirf wahi order dikhao jo customer ne specifically pucha hai\n- Kabhi bhi dusre orders ya customers ki information mention mat karo\n- Kisi customer ko kabhi mat batao ke store mein aur kitne orders hain ya unki details\n- Agar customer ka order nahi milta, sirf itna bolo \"order nahi mila, apni ID check kar len\"\n\n",
+  "credential": "__AI_GATEWAY_MANAGED__",
+  "tools": [
+    {
+      "type": "node",
+      "name": "Shopify",
+      "node": {
+        "nodeType": "n8n-nodes-base.shopifyTool",
+        "nodeTypeVersion": 1,
+        "nodeParameters": {
+          "descriptionType": "manual",
+          "toolDescription": "Use this tool to look up a customer's order details on Shopify, including order status, items purchased, and total amount, using the order ID or customer email.",
+          "apiVersion": "",
+          "authentication": "accessToken",
+          "resource": "order",
+          "operation": "get",
+          "orderId": "={{ $fromAI('order_id', 'The order ID provided by the customer') }}",
+          "options": {}
+        },
+        "credentials": {
+          "shopifyAccessTokenApi": {
+            "id": "fOJyC6YO0n4ygCoE",
+            "name": "Shopify Access Token account"
+          }
+        }
+      }
+    }
+  ],
+  "skills": [
+    {
+      "type": "skill",
+      "id": "skill_OTJ8qJDRMgtML86x"
+    }
+  ],
+  "personalisation": {
+    "icon": "bot",
+    "gradient": {
+      "from": "#00AB94",
+      "to": "#D069A3",
+      "angle": 304,
+      "fromStop": 17,
+      "toStop": 95
+    }
+  },
+  "memory": {
+    "enabled": true,
+    "storage": "n8n"
+  },
+  "config": {
+    "promptCaching": {
+      "enabled": true
+    }
+  },
+  "mcpServers": [],
+  "integrations": []
+}
