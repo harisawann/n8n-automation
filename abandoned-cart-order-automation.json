@@ -1,0 +1,175 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "authentication": "accessToken",
+        "topic": "orders/create"
+      },
+      "type": "n8n-nodes-base.shopifyTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "734ca31c-ac0c-43a1-89e0-c47a8f121b71",
+      "name": "Shopify Trigger",
+      "webhookId": "3ddae57a-765e-4d22-b739-91fb72f2fa2c",
+      "executeOnce": false,
+      "credentials": {
+        "shopifyAccessTokenApi": {
+          "id": "fOJyC6YO0n4ygCoE",
+          "name": "Shopify Access Token account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const cart = $input.first().json;\nreturn [{\n  json: {\n    customerEmail: cart.email || \"test@example.com\",\n    cartItems: cart.line_items ? cart.line_items.map(item => item.title).join(\", \") : \"No items\",\n    cartTotal: cart.total_price || \"0\"\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        224,
+        0
+      ],
+      "id": "e796d4d0-ea14-4496-8216-ea2de408703f",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=",
+        "messages": {
+          "messageValues": [
+            {
+              "type": "AIMessagePromptTemplate",
+              "message": "=You are a customer support assistant for an e-commerce store.  Create a professional and friendly order confirmation email using the Shopify order data below.  Include: - Customer name - Order number - Products ordered - Total amount - A thank-you message - Confirmation that the order has been received  Do not invent any information. Only use information present in the Shopify data.  Return only the email body.  Shopify Order Data: {{ JSON.stringify($json) }}"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        448,
+        0
+      ],
+      "id": "549af446-5279-480d-bbeb-acb33b60da7d",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-6-astra",
+          "mode": "list",
+          "cachedResultName": "gpt-6-astra"
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        448,
+        208
+      ],
+      "id": "9b6318e3-3d34-4b8e-9e8b-f359c045c72f",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": null,
+          "name": "",
+          "__aiGatewayManaged": true
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "usagexyz925@gmail.com",
+        "subject": "=Order Confirmation -",
+        "emailType": "text",
+        "message": "={{$json[\"text\"]}}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        816,
+        0
+      ],
+      "id": "94c24c05-35db-4401-a076-51d1c379e911",
+      "name": "Send a message",
+      "webhookId": "472c74d6-0062-4791-a34c-683b509c91e9",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "3UbwiEiKwVx3IWrd",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Shopify Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
+  },
+  "versionId": "4313653a-9efb-4cac-ac77-2a2d31d18c20",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "8d6dfd102ffc30424930b9e8447ca9bfec49cc737a5d313250255edb700f6aa8"
+  },
+  "nodeGroups": [],
+  "id": "3tRc6kz1Is2ch9Ao",
+  "tags": []
+}
